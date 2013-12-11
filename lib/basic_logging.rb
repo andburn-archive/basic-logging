@@ -1,5 +1,29 @@
 require "basic_logging/version"
 
 module BasicLogging
-  # Your code goes here...
+  
+	class LogFactory
+
+		def self.create_logger
+			BaseLogger.new
+		end
+
+	end
+
+	class BaseLogger
+
+		def log(message)
+			puts message
+		end
+
+	end
+
+	class FileLogger
+	
+		def log
+
+		end
+
+	end
+
 end

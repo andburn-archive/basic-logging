@@ -1,12 +1,12 @@
 # BasicLogging
 
-TODO: Write a gem description
+A logging library allowing use of different file formats.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'basic_logging'
+    gem 'basic_logging', :git => 'https://github.com/andburn/basic_logging.git'
 
 And then execute:
 

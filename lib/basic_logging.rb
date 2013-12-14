@@ -1,11 +1,36 @@
 require "basic_logging/version"
 
 module BasicLogging
-  
-	class LogFactory
 
-		def self.create_logger
-			Logger.new
+	class LoggerFactory
+		require 'fileutils'
+
+		attr_accessor :log_file
+
+		def self.create(file_type, file=nil)
+			log_file = file
+			if log_file.nil?
+				log_file = 'logs/basic_log'
+			end
+			logger = nil
+
+			FileUtils.makedirs(File.split(log_file)[0])
+
+			case file_type
+			when :text
+				log_file += '.txt'
+				logger = FileLogger.new(log_file)
+			when :csv
+				log_file += '.csv'
+				logger = CsvFileLogger.new(log_file)
+			when :html
+				log_file += '.html'
+				logger = HtmlFileLogger.new(log_file)
+			else
+				logger = Logger.new
+			end
+
+			return logger
 		end
 
 	end
@@ -19,65 +44,129 @@ module BasicLogging
 		WARN = 2
 		INFO = 3
 		DEBUG = 4
-		FINE = 5
 
-		def initialize
-			@level = FINE
+		def initialize(log_level=WARN)
+			@level = log_level.to_i
 		end
 
-		def log(message)
-			write_to_log(message) if @level >= FINE
+		def log(log_level, message, *args)
+			if @level >= log_level.to_i then
+				begin
+					formatted_message = message % args
+					level_string = level_to_string(log_level)
+					write_to_log(level_string, formatted_message)
+				rescue ArgumentError, TypeError
+					write_to_log('ERROR', "formatting log message string - #{message}")
+				end
+			end
 		end
 
-		def logf(format_string, *args)
-			write_to_log(format_string % args)
+		def error(message, *args)
+			log(ERROR, message, *args)
 		end
 
-		def error(message)
-			write_to_log('ERROR: ' + message) if @level >= ERROR
+		def warn(message, *args)
+			log(WARN, message, *args)
 		end
 
-		def warn(message)
-			write_to_log('WARN: ' + message) if @level >= WARN
+		def info(message, *args)
+			log(INFO, message, *args)
 		end
 
-		def info(message)
-			write_to_log('INFO: ' + message) if @level >= INFO
+		def debug(message, *args)
+			log(DEBUG, message, *args)
 		end
-
-		def debug(message)
-			write_to_log('DEBUG: ' + message) if @level >= DEBUG
-		end
-
-		def fine(message)
-			log(message)
-		end
-
-		def timestamp
-			tnow = Time::now
-			tnow.strftime("[%F %T]")
+		
+		def reset
+			# do nothing in this mode
 		end
 
 		private
 
-			def write_to_log(message)
-				puts "#{timestamp} #{message.to_s}"
+			def timestamp
+				tnow = Time::now
+				tnow.strftime("%F %T")
+			end
+
+			def write_to_log(level, message)
+				puts "[#{timestamp}] #{level}: #{message.to_s}"
+			end
+
+			def level_to_string(level)
+				str = ''
+				case level
+					when ERROR then str = 'ERROR'
+					when WARN then str = 'WARN'
+					when INFO then str = 'INFO'
+					when DEBUG then str = 'DEBUG'
+				end
+				return str
 			end
 	end
 
 	class FileLogger < Logger
 
-		def initialize(file)
-			@@log_file = file
-			f = File.new(@@log_file, 'w')
-			f.close
+		def initialize(file, level=WARN)
+			super(level)
+			@log_file = file
+			# create the log file
+			File.open(@log_file, 'a').close
 		end
 
-		def log(message)
-			File.open(@@log_file, 'w') do |f|
-				f.write "#{timestamp} #{message}\n"
-			end
+		def write_to_log(level, message)
+			write_to_file("[#{timestamp}] #{level}: #{message.to_s}\n")
 		end
+
+		def reset
+			File.delete(@log_file) if File.exists?(@log_file)
+		end
+
+		private
+
+			def write_to_file(message)
+				if File.exist?(@log_file)
+					File.open(@log_file, 'a') do |f|
+						begin
+							f.flock(File::LOCK_EX)
+							f.write message
+						ensure
+							f.flock(File::LOCK_UN)
+						end
+					end
+				end
+			end
+
+	end
+
+	class CsvFileLogger < FileLogger
+
+		def initialize(file)
+			super(file)
+		end
+
+		def write_to_log(level, message)
+			write_to_file("#{timestamp},#{level},#{message.to_s}\n")
+		end
+
+	end
+
+	class HtmlFileLogger < FileLogger
+
+		def initialize(file)
+			super(file)
+		end
+
+		def write_to_log(level, message)
+			write_to_file("#{create_html(level, message)}\n")
+		end
+
+		private
+
+			def create_html(level, message)
+				"<div class=\"#{level.downcase}\"><span class=\"level\">#{level}</span>" +
+				"<span class=\"datetime\">#{timestamp}</span>" + 
+				"<span class=\"message\">#{message}</span></div>"
+			end
 
 	end
 

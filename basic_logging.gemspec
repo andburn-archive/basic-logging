@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = BasicLogging::VERSION
   spec.authors       = ["Andrew Burnett"]
   spec.email         = ["andrew@andburn.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
+  spec.description   = %q{A simple logging library.}
+  spec.summary       = %q{A logging library allowing use of different file formats.}
+  spec.homepage      = "https://github.com/andburn/basic_logging.git"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)

@@ -22,16 +22,16 @@ module BasicLogging
 		# log to STDOUT. The method also takes an optional
 		# file argument, giving a path and filename (without 
 		# a file extension) to save the log file to. The default
-		# file location is <tt>logs/basic_log<.ext></tt>.
+		# file location is <tt>log/basic_log<.ext></tt>.
 		#
 		# The following code will create a HTML logger and store 
-		# the log file in <tt>logs/reports/main-log.html</tt>
-		#   logger = BasicLogging::LoggerFactory.create(:html, 'logs/reports/main-log')
+		# the log file in <tt>log/reports/main-log.html</tt>
+		#   logger = BasicLogging::LoggerFactory.create(:html, 'log/reports/main-log')
 		def self.create(file_type, file=nil)
 			# check for log file arg, if nil use default
 			log_file = file
 			if log_file.nil?
-				log_file = 'logs/basic_log'
+				log_file = 'log/basic_log'
 			end
 			logger = nil
 			# create any directories need in log_file path

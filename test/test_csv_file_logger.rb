@@ -1,13 +1,16 @@
 require 'test/unit'
 
 require 'basic_logging'
+require 'fileutils'
 
 class TestCsvFileLogger < Test::Unit::TestCase
 
 	def setup
-		# TODO: check how paths work when gem is packed (does test even work then)
 		@log_file_name = 'test/data/sample-log.csv'
+		# delete log file if exists and create any dirs required
 		File.delete(@log_file_name) if File.exists?(@log_file_name)
+		FileUtils.makedirs(File.split(@log_file_name)[0])
+		# create logger object and message
 		@logger = BasicLogging::CsvFileLogger.new(@log_file_name)
 		@message = 'simple message for CsvFileLogger'
 	end
